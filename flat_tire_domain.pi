@@ -1,0 +1,73 @@
+% flat_tire.pi in Picat
+% Fixing a flat tire domain
+% by Brandon Corfman, 2021.
+
+% A planning 'domain' is all of the valid actions that can be taken to solve any number of goals/problems.
+
+import planner.  % The planner is a built-in Picat library. 
+
+% STRIPS actions consist of four things: positive and negative preconditions that must be satisfied 
+% in the current state before the action will be tried, and positive and negative effects applied to
+% the current state to transform it into a new state.
+
+% The action remove(Obj, Loc) has a precondition that the Obj must be in Loc, and the effect is that
+% the Obj is deleted from Loc and the Obj is placed on the ground. Since the word "ground" is already
+% defined in Picat, I use the abbreviation "grnd" instead.
+action(S, NextS, Action, Cost) ?=>
+    Action = $remove(Obj, Loc),  
+    Cost = 1,
+    % positive preconditions
+    member($at(Obj, Loc), S),
+    Loc != grnd, % only works after Loc is assigned a value by the 'member' call.
+    % negative preconditions: None
+    % negative effects
+    select(P, S, S1), P = $at(Obj, Loc),  % select removes item P from list S, leaving list S1.
+    % positive effects
+    NextS = S1 ++ [$at(Obj, grnd)].  % adds a new predicate to S1 resulting in a new state.
+
+% The action put_on(T, axle) preconditions are that we have a tire T on the ground and no other tire is on
+% the axle, and effects are that the tire is removed from the "grnd" location and placed on the axle.
+action(S, NextS, Action, Cost) ?=>
+    Action = $put_on(T, axle),
+    Cost = 1,
+    % positive preconditions
+    member($tire(T), S),
+    member($at(T, grnd), S),
+    % negative preconditions
+    not member($at(flat, axle), S),
+    not member($at(spare, axle), S),
+    % negative effects
+    % NOTE: the ';' is an OR operation. Either at(T, grnd) is part of S and the S1 state gets defined, 
+    % or we define S1 as an empty list since P wasn't a part of state S to begin with. The issue is that 
+    % if S1 isn't defined correctly, the NextS assignment below it will also fail.
+    (select(P, S, S1), P = $at(T, grnd) ; S1 = []), 
+    % positive effects
+    NextS = S1 ++ [$at(T, axle)]. % '++' concatenates two lists together.
+
+% The action put_on(T, axle) preconditions are that we have an Obj on the ground and effects are that 
+% the Obj is removed from the "grnd" location and placed in Loc.
+action(S, NextS, Action, Cost) ?=>
+    Action = $put_in(Obj, Loc),
+    Cost = 1,
+    % positive preconditions
+    member($at(Obj, grnd), S),
+    % negative effects
+    (select(P, S, S1), P = $at(Obj, grnd) ; S1 = []), 
+    % positive effects
+    NextS = S1 ++ [$at(Obj, Loc)]. 
+
+% The action leave_overnight has no preconditions, and the effect is that car gets stripped!
+action(S, NextS, Action, Cost) =>
+    Action = $leave_overnight,
+    Cost = 1,
+    % preconditions: None
+    % negative effects
+    (select(P1, S, S1), P1 = $at(spare, grnd);  S1 = []),
+    (select(P2, S, S2), P2 = $at(spare, axle);  S2 = []),
+    (select(P3, S, S3), P3 = $at(spare, trunk); S3 = []),
+    (select(P4, S, S4), P4 = $at(flat, grnd);   S4 = []),
+    (select(P5, S, S5), P5 = $at(flat, axle);   S5 = []),
+    (select(P6, S, S6), P6 = $at(flat, trunk);  S6 = []),
+    NextS = S1 ++ S2 ++ S3 ++ S4 ++ S5 ++ S6.
+    % positive effects: None
+ 

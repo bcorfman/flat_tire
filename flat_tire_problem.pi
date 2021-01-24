@@ -1,0 +1,37 @@
+% flat_tire_problem.pi in Picat
+% Fixing a flat tire example
+% by Brandon Corfman, 2021.
+
+% Provided your PATH and PICATPATH environment variables are defined correctly, 
+% at the command line, type 'picat flat_tire_problem.pi' to execute this script. 
+
+import planner.           % The planner is a built-in Picat library. 
+import flat_tire_domain.  % Our valid actions for solving one or more flat tire problems.
+
+% Initial state: there's a flat tire on the axle and a spare in the trunk.
+% NOTE: The '$' at the start of the list keeps each item in the list from being executed immediately 
+%       as a function call.
+init_state(S) =>
+    S = $[tire(flat), tire(spare), at(flat, axle), at(spare, trunk)].
+
+% The goal: in the final state, the spare tire should be on the axle, and the flat is put in the trunk
+% so we don't leave a mess. Everything else in the final state doesn't matter.
+% NOTE: the '$' in front of 'at' delays it from being interpreted immediately as a function call.
+final(S) => member($at(spare, axle), S), member($at(flat, trunk), S).
+
+% Figure out the best plan for fixing the tire.
+% NOTE: In Picat, variables must be capitalized, and plain 'ol atoms or keywords are all lowercase.
+main => 
+    init_state(S),
+    best_plan(S, Plan),
+    nl, % new line
+    println("Plan:"),
+    foreach(Step in Plan) 
+        writeln(Step) 
+    end.
+
+% Not to keep you in suspense, the best plan for this example problem is -
+% remove(flat,axle)
+% remove(spare,trunk)
+% put_on(spare,axle)
+% put_in(flat,trunk)
