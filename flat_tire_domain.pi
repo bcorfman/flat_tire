@@ -44,7 +44,7 @@ action(S, NextS, Action, Cost) ?=>
     % positive effects
     NextS = S1 ++ [$at(T, axle)]. % '++' concatenates two lists together.
 
-% The action put_on(T, axle) preconditions are that we have an Obj on the ground and effects are that 
+% The action put_in(Obj, Loc) preconditions are that we have an Obj on the ground and effects are that 
 % the Obj is removed from the "grnd" location and placed in Loc.
 action(S, NextS, Action, Cost) ?=>
     Action = $put_in(Obj, Loc),
